@@ -1,4 +1,4 @@
-# Alpine Docker Image with  kubectl and helm
+# Debian Docker Image with  kubectl and helm
 
 helm and kubectl binaries within a docker image supporting multiarchitecture AMD64 and ARM64.
 
