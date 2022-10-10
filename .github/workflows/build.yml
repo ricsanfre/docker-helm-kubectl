@@ -1,0 +1,49 @@
+---
+name: Build
+
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "10 1 * * 0"
+
+jobs:
+  # If on master branch, build and release image.
+  release:
+    name: Release
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Read environment file
+        run: cat .env >> ${GITHUB_ENV}
+
+      - name: Set up Qemu
+        uses: docker/setup-qemu-action@v1
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build multiarch and push image.
+        uses: docker/build-push-action@v2
+        with:
+          context: ./
+          file: Dockerfile
+          platforms: linux/amd64, linux/arm64
+          build-args: |
+            KUBE_VERSION=${{ env.KUBE_VERSION }}
+            HELM_VERSION=${{ env.HELM_VERSION }}
+          push: true
+          tags: ${{ github.repository }}:${{ env.KUBE_VERSION }}
